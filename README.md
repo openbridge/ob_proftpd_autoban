@@ -19,24 +19,25 @@ Here are the files included.
 This script controls the operation of the <code>ban.py</code> application.
 
 #### Using AWS S3 to share the hosts.deny and whitelist.txt
-S3 is used as a simple method to share the hosts.deny and whitelist.txt across Proftpd hosts. This is especially useful in clustered environments. While not sexy, it gets the job done
+S3 is used as a simple method to share the <code>hosts.deny</code> and <code>whitelist.txt</code> across Proftpd hosts. This is especially useful in clustered environments.
 
-You will need to make sure you edit the script and put in your S3 bucket location that the Proftpd will have access to. Also, adjust your subdirectories where you will store both files. I followed the normal OS path for the files but you can change this however you feel most appropriate.
+You will need to make sure you edit the script and put in your S3 bucket location. Make sure that Proftpd will have access to this bucket. Also, adjust your subdirectories where you will store both files. The config  followd the normal OS path for the files but you can change this however you feel most appropriate.
 
 ```
 s3_whitelist="s3://bucket/etc/ban/"
 s3_hostsdeny="s3://bucket/etc/"
 ```
-The script will make sure that the file is synced first from S3. This is to ensure it has any updates from other nodes. Next, it will run <code>ban.py</code> to scan the AUTH log for suspicious behaviors. If it finds any, those IPs will be appended to the hosts.deny file. Once complete, it will push an update back to S3. This will work for standalone servers as well. It just means your standalone server is the only one reading and writing to those files.
+#### Sync Operation
+The script will make sure that <code>hosts.deny</code> and <code>whitelist.txt</code> are synced first from S3. This is to ensure it has any updates from other nodes. Next, it will run <code>ban.py</code> to scan the <code>AUTH</code> log for suspicious behaviors as defined in the config. If it finds any, those IPs will be appended to the hosts.deny file. Once <code>ban.py</code> is complete, the script will push an update back to S3. While the use of S3 was intended for a cluster it will work for standalone servers as well. It just means your standalone server is the only one reading and writing to those files.
 
 #### Note
 You will notice a random <code>sleeptime</code> generated each time the script is run. That is to reduce the possibility that a different node in the cluster may conflict perform the same operation as other nodes.
 
 ### context="aws"
-In its current form, everything wants to be run in an AWS context with S3. This is what context="aws" does. It will still run if you use something like context="local" for testing purposes. You can also replace the S3 commands with something else assuming your want to store those files to a NAS/SAN location.
+In its current form, everything wants to be run in an AWS context. This is what context="aws" does. It will still run if you use something like context="local" for testing purposes. You can also replace the S3 commands with something else assuming your want to store those files to a NAS/SAN location.
 
 ## ban.py
-You will need to edit <code>/usr/local/bin/ban.py</code> to reference the location of your AUTH log. In this example the log is located here: <code>/ebs/logs/proftpd/proftpd_auth.log</code>.
+You  need to edit <code>/usr/local/bin/ban.py</code> to reference the location of your <code>AUTH</code> log. In this example the log is located here: <code>/ebs/logs/proftpd/proftpd_auth.log</code>. Change this to where ever you happen to keep your log. 
 
 ## config.cfg
 
