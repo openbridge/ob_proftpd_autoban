@@ -1,0 +1,25 @@
+###################
+# SCRIPT LOGS
+###################
+
+if [[ -d /ebs/logs/${filename} ]]; then
+
+  echo "OK: The /ebs/logs/${filename} directory exits"
+
+else
+
+  echo "ERROR: The /ebs/logs/${filename} does not exit. Creating..."
+  mkdir -p /ebs/logs/${filename} || err "ERROR [${filename}]: Could not make the log directory for ${filename}"
+
+fi
+
+if [[ -f /ebs/logs/${filename}/${filename}.log ]]; then
+
+  echo "OK: The /ebs/logs/${filename}/${filename}.log exits"
+
+else
+
+  echo "ERROR: The /ebs/logs/${filename}/${filename}.log does not exit. Creating..."
+  touch /ebs/logs/${filename}/${filename}.log || err "ERROR [${filename}]: Could not touch the ${filename}.log"
+
+fi
