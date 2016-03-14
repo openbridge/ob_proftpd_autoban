@@ -33,7 +33,7 @@ import sys
 
 
 if len(sys.argv) != 2:
-    print 'Usage:', sys.argv[0], '<config.cfg>'
+    print 'Usage:', sys.argv[0], '/etc/ban/config.cfg'
     sys.exit(2)
 
 
@@ -56,7 +56,7 @@ login_attempts_threshold = config.getint(
 # Period for setting above in seconds
 login_attempts_period = config.getint('DEFAULT', 'login_attempts_period')
 
-whitelist = config.get('DEFAULT', 'whitelist')
+whitelist = config.get('DEFAULT', '/etc/ban/whitelist.txt')
 if whitelist:
     whitelist = [line.strip() for line in file(whitelist) if line.strip()] or []
 

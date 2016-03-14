@@ -41,7 +41,7 @@ echo "OK: Running the ${filename} on ${date}..."
 
 source /usr/local/bin/logging
 
-context="ob_mode"
+context="aws"
 
 sleeptime=$(shuf -i 20-60 -n 1)
 
@@ -66,10 +66,10 @@ if [[ ${context} = aws ]]; then
     aws s3 cp ${s3_hostsdeny}hosts.deny /etc/hosts.deny || err "ERROR [${filename}]: Could run not AWSCLI (code: ${?})"
 
     # Update the blacklist
-    python /usr/local/bin/ban.py /etc/ban/config.cfg || err "ERROR [${filename}]: Could run not blacklist.py (code: ${?})"
+    python /usr/local/bin/ban.py /etc/ban/config.cfg || err "ERROR [${filename}]: Could run not ban.py (code: ${?})"
 
     # Remove any duplicate entries
-    sort -u /etc/hosts.deny -o /etc/hosts.deny || err "ERROR [${filename}]: Could run not blacklist.py (code: ${?})"
+    sort -u /etc/hosts.deny -o /etc/hosts.deny || err "ERROR [${filename}]: Could run not ban.py (code: ${?})"
 
     # Push the blacklist back to S3
     aws s3 cp /etc/hosts.deny ${s3_hostsdeny}hosts.deny || err "ERROR [${filename}]: Could run not AWSCLI (code: ${?})"
@@ -77,10 +77,10 @@ if [[ ${context} = aws ]]; then
 else
 
     # Update the blacklist
-    python /usr/local/bin/blacklist.py || err "ERROR [${filename}]: Could run not blacklist.py (code: ${?})"
+    python /usr/local/bin/blacklist.py || err "ERROR [${filename}]: Could run not ban.py (code: ${?})"
 
     # Remove any duplicate entries
-    sort -u /etc/hosts.deny -o /etc/hosts.deny || err "ERROR [${filename}]: Could run not blacklist.py (code: ${?})"
+    sort -u /etc/hosts.deny -o /etc/hosts.deny || err "ERROR [${filename}]: Could run not ban.py (code: ${?})"
 
 fi
 
