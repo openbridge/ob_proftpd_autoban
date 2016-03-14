@@ -1,6 +1,6 @@
 <h1>Autoban</h1>
 
-The purpose of this application is to detect malicious login attempts and ban them. This is similar to what Fail2Ban accomplishes. However, Fail2Ban was not working as expected in a Docker context. Also, I wanted something simple and work with the Proftpd mod_wrap2 module.
+The purpose of this application is to detect malicious login attempts and ban them. This is similar to what Fail2Ban accomplishes. However, Fail2Ban was not working as expected in a Docker context. Also, I wanted something simple and be able to work with the Proftpd mod_wrap2 module.
 
 The application, while lightweight, gets the job done.
 
