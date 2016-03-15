@@ -56,7 +56,7 @@ login_attempts_threshold = config.getint(
 # Period for setting above in seconds
 login_attempts_period = config.getint('DEFAULT', 'login_attempts_period')
 
-whitelist = config.get('DEFAULT', '/etc/ban/whitelist.txt')
+whitelist = config.get('DEFAULT', 'whitelist')
 if whitelist:
     whitelist = [line.strip() for line in file(whitelist) if line.strip()] or []
 
