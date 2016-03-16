@@ -37,7 +37,7 @@ You will notice a random <code>sleeptime</code> generated each time the script i
 In its current form, everything wants to be run in an AWS context. This is what context="aws" does. It will still run if you use something like context="local" for testing purposes. You can also replace the S3 commands with something else assuming your want to store those files to a NAS/SAN location.
 
 ## ban.py
-You  need to edit <code>/usr/local/bin/ban.py</code> to reference the location of your <code>AUTH</code> log. In this example the log is located here: <code>/ebs/logs/proftpd/proftpd_auth.log</code>. Change this to where ever you happen to keep your log. 
+You  need to edit <code>/usr/local/bin/ban.py</code> to reference the location of your <code>AUTH</code> log. In this example the log is located here: <code>/ebs/logs/proftpd/proftpd_auth.log</code>. Change this to where ever you happen to keep your log.
 
 ## config.cfg
 
@@ -83,6 +83,19 @@ Example configuration statement for mod_wrap2
 ```
 We are focused on the <code>file:/etc/hosts.deny</code> aspect of the config vs <code>file:/etc/hosts.allow</code>. The hosts.deny file is where we will be storing the banned IPs
 
+#### hosts.deny
+
+In the hosts deny file you will start seeing entries like this:
+
+```
+ALL: 222.186.15.104
+ALL: 222.186.15.200
+ALL: 222.186.34.94
+ALL: 222.186.58.136
+ALL: 222.187.222.220
+ALL: 222.187.224.222
+```
+These are all from China Telecom.
 
 ## Running
 
