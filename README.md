@@ -15,8 +15,8 @@ Here are the files included.
 
 ```
 
-## ban.sh
-This script controls the operation of the <code>ban.py</code> application.
+# ban.sh
+This script controls the operation of the <code>ban.py</code> application. This is what orchestrates various processes for running <code>ban.py</code> and file sync activities.
 
 #### Using AWS S3 to share the hosts.deny and whitelist.txt
 S3 is used as a simple method to share the <code>hosts.deny</code> and <code>whitelist.txt</code> across Proftpd hosts. This is especially useful in clustered environments.
@@ -33,13 +33,13 @@ The script will make sure that <code>hosts.deny</code> and <code>whitelist.txt</
 #### Note
 You will notice a random <code>sleeptime</code> generated each time the script is run. That is to reduce the possibility that a different node in the cluster may conflict perform the same operation as other nodes.
 
-### context="aws"
+#### context="aws"
 In its current form, everything wants to be run in an AWS context. This is what context="aws" does. It will still run if you use something like context="local" for testing purposes. You can also replace the S3 commands with something else assuming your want to store those files to a NAS/SAN location.
 
-## ban.py
+# ban.py
 You  need to edit <code>/usr/local/bin/ban.py</code> to reference the location of your <code>AUTH</code> log. In this example the log is located here: <code>/ebs/logs/proftpd/proftpd_auth.log</code>. Change this to where ever you happen to keep your log.
 
-## config.cfg
+#### config.cfg
 
 You can control the behavior of the application with the config. For example, you can set the user names, attempts and periods that the application will use to qualify a malicious user to ban.
 
@@ -52,7 +52,7 @@ login_attempts_threshold = 5
 login_attempts_period = 300
 whitelist = /etc/ban/whitelist.txt
 ```
-## whitelist.txt
+#### whitelist.txt
 Any IP listed here will not be included in the hosts.deny file
 
 Example:
@@ -61,8 +61,24 @@ Example:
 8.8.8.8
 ```
 
-## mod_wrap2 config
+#### hosts.deny
+
+In the hosts deny file you will start seeing entries like this:
+
+```
+ALL: 222.186.15.104
+ALL: 222.186.15.200
+ALL: 222.186.34.94
+ALL: 222.186.58.136
+ALL: 222.187.222.220
+ALL: 222.187.224.222
+```
+These are all from China Telecom.
+
+# mod_wrap2
 This requires the use of mod_wrap2. It is responsible for reading the hosts.deny file and blocking access.
+
+http://www.proftpd.org/docs/contrib/mod_wrap2.html
 
 Example configuration statement for mod_wrap2
 
@@ -82,20 +98,6 @@ Example configuration statement for mod_wrap2
 
 ```
 We are focused on the <code>file:/etc/hosts.deny</code> aspect of the config vs <code>file:/etc/hosts.allow</code>. The hosts.deny file is where we will be storing the banned IPs
-
-#### hosts.deny
-
-In the hosts deny file you will start seeing entries like this:
-
-```
-ALL: 222.186.15.104
-ALL: 222.186.15.200
-ALL: 222.186.34.94
-ALL: 222.186.58.136
-ALL: 222.187.222.220
-ALL: 222.187.224.222
-```
-These are all from China Telecom.
 
 ## Running
 
