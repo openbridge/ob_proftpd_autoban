@@ -23,65 +23,80 @@
 ##  version 1.0
 ##
 
-set -o errexit
+set -o xtrace
 set -o nounset
 set -o pipefail
 
-date=$(date +"%Y-%m-%d")
-datetime="$(date +'%Y-%m-%dT%H:%M:%S%z')"
-file="$(basename "$0")"
-filename="${file%.*}"
+source /network
 
-err() {
-  echo "[${datetime}]: ${*}" 2>>/ebs/logs/${filename}/${filename}.log 1>&2 |ts
-  exit 1
-}
+context="$MODE"
+sleeptime=$(shuf -i 5-15 -n 1)
 
-echo "OK: Running the ${filename} on ${date}..."
-
-source /usr/local/bin/logging
-
-context="aws"
-
-sleeptime=$(shuf -i 20-60 -n 1)
-
-echo "OK: Waiting for ${sleeptime} seconds before we run the blacklist sync porcess..."
+echo "OK: Waiting for ${sleeptime} seconds before we run the blacklist sync process..."
 
 sleep ${sleeptime}
-
-# AWS S3 config files
-s3_whitelist="s3://bucket/etc/ban/"
-s3_hostsdeny="s3://bucket/etc/"
 
 ###################
 # GENERATE BLACKLIST
 ###################
 
+function get_config() {
+
 if [[ ${context} = aws ]]; then
-
+  # AWS S3 config files
+    s3_whitelist="s3://ob_internal/etc/ban/"
+    s3_hostsdeny="s3://ob_internal/etc/"
     # Sync whitelist IPs from S3
-    aws s3 cp ${s3_whitelist}whitelist.txt /etc/ban/whitelist.txt || err "ERROR [${filename}]: Could run not AWSCLI (code: ${?})"
-
+    aws s3 cp ${s3_whitelist}whitelist.txt /etc/ban/whitelist.txt
     # Sync blacklist from S3
-    aws s3 cp ${s3_hostsdeny}hosts.deny /etc/hosts.deny || err "ERROR [${filename}]: Could run not AWSCLI (code: ${?})"
-
+    aws s3 cp ${s3_hostsdeny}hosts.deny /etc/hosts.deny
     # Update the blacklist
-    python /usr/local/bin/ban.py /etc/ban/config.cfg || err "ERROR [${filename}]: Could run not ban.py (code: ${?})"
-
+    python /usr/bin/ban.py /etc/ban/config.cfg
     # Remove any duplicate entries
-    sort -u /etc/hosts.deny -o /etc/hosts.deny || err "ERROR [${filename}]: Could run not ban.py (code: ${?})"
-
+    sort -u /etc/hosts.deny -o /etc/hosts.deny
     # Push the blacklist back to S3
-    aws s3 cp /etc/hosts.deny ${s3_hostsdeny}hosts.deny || err "ERROR [${filename}]: Could run not AWSCLI (code: ${?})"
-
+    aws s3 cp /etc/hosts.deny ${s3_hostsdeny}hosts.deny
 else
-
     # Update the blacklist
-    python /usr/local/bin/blacklist.py || err "ERROR [${filename}]: Could run not ban.py (code: ${?})"
-
+    python /usr/bin/ban.py
     # Remove any duplicate entries
-    sort -u /etc/hosts.deny -o /etc/hosts.deny || err "ERROR [${filename}]: Could run not ban.py (code: ${?})"
+    sort -u /etc/hosts.deny -o /etc/hosts.deny
+fi
+}
 
+function update_allowed() {
+    while read -r allowed
+    do
+      name="${allowed}"
+      echo "OK: Add $name to ProFTP IP/DNS-based allowed access control table"
+      mysql -h ${MYSQL_HOST} -u ${PROFTPD_SYSTEM_USER} -p${PROFTPD_SYSTEM_PASSWORD} -e "use ${PROFTPD_DATABASE}; INSERT IGNORE INTO ftpdallowed (client_ip, accessed, modified) VALUES ('$name', 'NOW()', 'NOW()');"
+    done < /etc/ban/whitelist.txt
+}
+
+function update_denied() {
+    sed 's|ALL:\s||g' /etc/hosts.deny > /etc/banip
+    while read -r denied
+    do
+      name="${denied}"
+      echo "OK: Add $name to ProFTP IP/DNS-based denied access control table"
+      mysql -h ${MYSQL_HOST} -u ${PROFTPD_SYSTEM_USER} -p${PROFTPD_SYSTEM_PASSWORD} -e "use ${PROFTPD_DATABASE}; INSERT IGNORE INTO ftpddenied (client_ip, accessed, modified) VALUES ('$name', 'NOW()', 'NOW()'); DELETE FROM ftpddenied
+      WHERE modified < UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 180 DAY))"
+    done < /etc/banip
+}
+
+function run_all() {
+    echo "STARTING: All Ban processing ..."
+    get_config
+    update_allowed
+    update_denied
+}
+
+if [[ -z "${1:-}" ]]; then
+    echo "STARTING: Running all processes ..."
+    run_all
+else
+    echo "STARTING: Running ${1} process ..."
+    ${1}
 fi
 
 exit 0
