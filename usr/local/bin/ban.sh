@@ -44,18 +44,18 @@ function get_config() {
 
 if [[ ${context} = aws ]]; then
   # AWS S3 config files
-    s3_whitelist="s3://ob_internal/etc/ban/"
-    s3_hostsdeny="s3://ob_internal/etc/"
+    s3_whitelist="s3://ob_internal/etc/ban"
+    s3_hostsdeny="s3://ob_internal/etc"
     # Sync whitelist IPs from S3
-    aws s3 cp ${s3_whitelist}whitelist.txt /etc/ban/whitelist.txt
+    aws s3 cp ${s3_whitelist}/whitelist.txt /etc/ban/whitelist.txt
     # Sync blacklist from S3
-    aws s3 cp ${s3_hostsdeny}hosts.deny /etc/hosts.deny
+    aws s3 cp ${s3_hostsdeny}/hosts.deny /etc/hosts.deny
     # Update the blacklist
     python /usr/bin/ban.py /etc/ban/config.cfg
     # Remove any duplicate entries
     sort -u /etc/hosts.deny -o /etc/hosts.deny
     # Push the blacklist back to S3
-    aws s3 cp /etc/hosts.deny ${s3_hostsdeny}hosts.deny
+    aws s3 cp /etc/hosts.deny ${s3_hostsdeny}/hosts.deny
 else
     # Update the blacklist
     python /usr/bin/ban.py
@@ -69,7 +69,7 @@ function update_allowed() {
     do
       name="${allowed}"
       echo "OK: Add $name to ProFTP IP/DNS-based allowed access control table"
-      mysql -h ${MYSQL_HOST} -u ${PROFTPD_SYSTEM_USER} -p${PROFTPD_SYSTEM_PASSWORD} -e "use ${PROFTPD_DATABASE}; INSERT IGNORE INTO ftpdallowed (client_ip, accessed, modified) VALUES ('$name', 'NOW()', 'NOW()');"
+      mysql -h ${MYSQL_HOST} -u ${PROFTPD_SYSTEM_USER} -p${PROFTPD_SYSTEM_PASSWORD} -e "use ${PROFTPD_DATABASE}; INSERT IGNORE INTO ftpdallowed (client_ip) VALUES ('$name');"
     done < /etc/ban/whitelist.txt
 }
 
@@ -79,7 +79,7 @@ function update_denied() {
     do
       name="${denied}"
       echo "OK: Add $name to ProFTP IP/DNS-based denied access control table"
-      mysql -h ${MYSQL_HOST} -u ${PROFTPD_SYSTEM_USER} -p${PROFTPD_SYSTEM_PASSWORD} -e "use ${PROFTPD_DATABASE}; INSERT IGNORE INTO ftpddenied (client_ip, accessed, modified) VALUES ('$name', 'NOW()', 'NOW()'); DELETE FROM ftpddenied
+      mysql -h ${MYSQL_HOST} -u ${PROFTPD_SYSTEM_USER} -p${PROFTPD_SYSTEM_PASSWORD} -e "use ${PROFTPD_DATABASE}; INSERT IGNORE INTO ftpddenied (client_ip) VALUES ('$name'); DELETE FROM ftpddenied
       WHERE modified < UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 180 DAY))"
     done < /etc/banip
 }
