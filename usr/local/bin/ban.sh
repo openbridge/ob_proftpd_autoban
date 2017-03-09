@@ -69,7 +69,7 @@ function update_allowed() {
     do
       name="${allowed}"
       echo "OK: Add $name to ProFTP IP/DNS-based allowed access control table"
-      mysql -h ${MYSQL_HOST} -u ${PROFTPD_SYSTEM_USER} -p${PROFTPD_SYSTEM_PASSWORD} -e "use ${PROFTPD_DATABASE}; INSERT IGNORE INTO ftpdallowed (client_ip) VALUES ('$name');"
+      mysql -h ${MYSQL_HOST} -u ${PROFTPD_SYSTEM_USER} -p${PROFTPD_SYSTEM_PASSWORD} -e "use ${PROFTPD_DATABASE}; INSERT IGNORE INTO ftpd_allow (client_ip) VALUES ('$name');"
     done < /etc/ban/whitelist.txt
 }
 
@@ -79,7 +79,7 @@ function update_denied() {
     do
       name="${denied}"
       echo "OK: Add $name to ProFTP IP/DNS-based denied access control table"
-      mysql -h ${MYSQL_HOST} -u ${PROFTPD_SYSTEM_USER} -p${PROFTPD_SYSTEM_PASSWORD} -e "use ${PROFTPD_DATABASE}; INSERT IGNORE INTO ftpddenied (client_ip) VALUES ('$name'); DELETE FROM ftpddenied
+      mysql -h ${MYSQL_HOST} -u ${PROFTPD_SYSTEM_USER} -p${PROFTPD_SYSTEM_PASSWORD} -e "use ${PROFTPD_DATABASE}; INSERT IGNORE INTO ftpd_deny (client_ip) VALUES ('$name'); DELETE FROM ftpd_deny
       WHERE modified < UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 180 DAY))"
     done < /etc/banip
 }
