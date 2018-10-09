@@ -139,7 +139,7 @@ def parse_ips_json(fname, existing):
 blacklisted_ips = parse_ips_re("/etc/hosts.deny")
 print 'Currently banned:', ', '.join(blacklisted_ips)
 
-source_ips = parse_ips_json("/ebs/logs/proftpd/proftpd_auth.log", blacklisted_ips)
+source_ips = parse_ips_json("/var/log/proftpd/proftpd_auth.log", blacklisted_ips)
 
 
 with file("/etc/hosts.deny", "a") as hosts_deny:
