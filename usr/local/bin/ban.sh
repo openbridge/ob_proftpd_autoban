@@ -36,7 +36,7 @@ if [[ ${context} = aws ]]; then
     aws s3 cp /etc/hosts.deny ${s3_hostsdeny}hosts.deny
 else
     # Update the blacklist
-    python /usr/bin/ban.py
+    python /usr/bin/ban.py /etc/ban/config.cfg
     # Remove any duplicate entries
     sort -u /etc/hosts.deny -o /etc/hosts.deny
     sort -u /etc/ban/whitelist.txt -o /etc/ban/whitelist.txt
