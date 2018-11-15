@@ -1,28 +1,5 @@
 #!/usr/bin/env bash
 
-##    ____                   __         _     __
-##   / __ \____  ___  ____  / /_  _____(_)___/ /___ ____
-##  / / / / __ \/ _ \/ __ \/ __ \/ ___/ / __  / __ `/ _ \
-## / /_/ / /_/ /  __/ / / / /_/ / /  / / /_/ / /_/ /  __/
-## \____/ .___/\___/_/ /_/_.___/_/  /_/\__,_/\__, /\___/
-##     /_/                                  /____/
-##
-##
-##  Blacklist - Auto Ban
-##  ----------------------------------------------------------------------
-##  This process will scan a log for hacking attempts and ad the IP's
-##  to /etc/hosts.deny. This is then picked up by Proftpd. Includes sync
-##  to S3 to allow for sharing across multiple instances.
-##
-##  For more information on Proftpd visit http://www.proftpd.org
-##
-##  -------------------------------------------------------------
-##  Copyright (C) 2018 Openbridge, Inc. - All Rights Reserved
-##  Permission to copy and modify is granted under the Openbridge, Inc. license
-##  Last revised 11/13/2018
-##  version 1.1
-##
-
 set -o xtrace
 set -o nounset
 set -o pipefail
@@ -54,6 +31,7 @@ if [[ ${context} = aws ]]; then
     python /usr/bin/ban.py /etc/ban/config.cfg
     # Remove any duplicate entries
     sort -u /etc/hosts.deny -o /etc/hosts.deny
+    sort -u /etc/ban/whitelist.txt -o /etc/ban/whitelist.txt
     # Push the blacklist back to S3
     aws s3 cp /etc/hosts.deny ${s3_hostsdeny}hosts.deny
 else
@@ -61,6 +39,7 @@ else
     python /usr/bin/ban.py
     # Remove any duplicate entries
     sort -u /etc/hosts.deny -o /etc/hosts.deny
+    sort -u /etc/ban/whitelist.txt -o /etc/ban/whitelist.txt
 fi
 }
 
@@ -72,7 +51,7 @@ function update_denied() {
       name="${denied}"
       echo "OK: Add $name to ProFTP IP/DNS-based denied access control table"
       mysql -h ${MYSQL_HOST} -u ${PROFTPD_SYSTEM_USER} -p${PROFTPD_SYSTEM_PASSWORD} -e "use ${PROFTPD_DATABASE}; INSERT IGNORE INTO ftpd_deny (client_ip) VALUES ('$name'); DELETE FROM ftpd_deny
-      WHERE modified < UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 30 DAY))"
+      WHERE modified < UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 3 DAY))"
     done < /etc/banip
 }
 
@@ -82,7 +61,7 @@ function update_allowed() {
       sleep 0.2
       name="${allowed}"
       echo "OK: Add $name to ProFTP IP/DNS-based allowed access control table"
-      mysql -h ${MYSQL_HOST} -u ${PROFTPD_SYSTEM_USER} -p${PROFTPD_SYSTEM_PASSWORD} -e "use ${PROFTPD_DATABASE}; INSERT IGNORE INTO ftpd_allow (client_ip, accessed, modified) VALUES ('$name', 'NOW()', 'NOW()'); DELETE FROM ftpd_deny WHERE client_ip='$name'"
+      mysql -h ${MYSQL_HOST} -u ${PROFTPD_SYSTEM_USER} -p${PROFTPD_SYSTEM_PASSWORD} -e "use ${PROFTPD_DATABASE}; INSERT IGNORE INTO ftpd_allow (client_ip) VALUES ('$name'); DELETE FROM ftpd_deny WHERE client_ip='$name'"
     done < /etc/ban/whitelist.txt
 }
 
