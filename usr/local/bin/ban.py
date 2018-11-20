@@ -1,5 +1,5 @@
 #!/usr/bin/env python
- ##    ____                   __         _     __
+##    ____                   __         _     __
 ##   / __ \____  ___  ____  / /_  _____(_)___/ /___ ____
 ##  / / / / __ \/ _ \/ __ \/ __ \/ ___/ / __  / __ `/ _ \
 ## / /_/ / /_/ /  __/ / / / /_/ / /  / / /_/ / /_/ /  __/
@@ -28,7 +28,7 @@ import datetime
 import json
 import re
 import sys
- if len(sys.argv) != 2:
+if len(sys.argv) != 2:
     print 'Usage:', sys.argv[0], '/etc/ban/config.cfg'
     sys.exit(2)
  config = ConfigParser.RawConfigParser()
